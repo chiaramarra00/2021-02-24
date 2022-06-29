@@ -10,6 +10,7 @@ import java.util.ResourceBundle;
 
 import it.polito.tdp.PremierLeague.model.Match;
 import it.polito.tdp.PremierLeague.model.Model;
+import it.polito.tdp.PremierLeague.model.Statistiche;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.scene.control.Button;
@@ -47,17 +48,54 @@ public class FXMLController {
 
     @FXML
     void doCreaGrafo(ActionEvent event) {
-    	
+    	Match m = cmbMatch.getValue();
+    	if (m==null) {
+    		txtResult.setText("Selezionare un match\n");
+    		return;
+    	}
+    	model.creaGrafo(m);
+    	txtResult.setText("Grafo creato\n# VERTICI: "+model.nVertici()+"\n# ARCHI: "+model.nArchi()+"\n");
     }
 
     @FXML
-    void doGiocatoreMigliore(ActionEvent event) {    	
-    	
+    void doGiocatoreMigliore(ActionEvent event) {
+    	Match m = cmbMatch.getValue();
+    	if (m==null) {
+    		txtResult.setText("Selezionare un match\n");
+    		return;
+    	}
+    	if (!model.grafoCreato()) {
+    		txtResult.setText("Creare un grafo\n");
+    		return;
+    	}
+    	GiocatoreMigliore gm = model.getGiocatoreMigliore();
+    	txtResult.setText("Giocatore migliore:\n"+gm.getGiocatore()+", delta efficienza = "+gm.getDeltaEfficienza());
     }
     
     @FXML
     void doSimula(ActionEvent event) {
-
+    	Match m = cmbMatch.getValue();
+    	if (m==null) {
+    		txtResult.setText("Selezionare un match\n");
+    		return;
+    	}
+    	if (!model.grafoCreato()) {
+    		txtResult.setText("Creare un grafo\n");
+    		return;
+    	}
+    	int n;
+    	try {
+    		n = Integer.parseInt(txtN.getText());
+    	} catch (NumberFormatException e) {
+    		txtResult.setText("Inserire il numero di azioni salienti da simulare\n");
+    		e.printStackTrace();
+    		return;
+    	}
+    	Statistiche stat = model.simula(m,n);
+    	txtResult.setText("Risultato della partita:\n    ");
+    	txtResult.appendText(stat.getGoalPerSquadra().get(m.getTeamHomeNAME())+" - "+stat.getGoalPerSquadra().get(m.getTeamAwayNAME())+"\n");
+    	txtResult.appendText("Numero di espulsi:\n     ");
+    	txtResult.appendText(stat.getEspulsiPerSquadra().get(m.getTeamHomeNAME())+" - "+stat.getEspulsiPerSquadra().get(m.getTeamAwayNAME())+"\n");
     }
 
     @FXML // This method is called by the FXMLLoader when initialization is complete
@@ -73,5 +111,6 @@ public class FXMLController {
     
     public void setModel(Model model) {
     	this.model = model;
+    	cmbMatch.getItems().setAll(model.getMatches());
     }
 }
